@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI PDF Knowledge Base Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page">
+        <header class="hero">
+            <div>
+                <h1>AI PDF Knowledge Base Chatbot</h1>
+                <p class="subtitle">
+                    Upload PDF documents, ask business questions, and get AI answers with sources.
+                </p>
+            </div>
+        </header>
+
+        <main class="layout">
+            <section class="card">
+                <div class="card-header">
+                    <h2>1. Upload PDF documents</h2>
+                    <p>Add one or more PDF files to build your knowledge base.</p>
+                </div>
+
+                <div class="upload-box">
+                    <input id="pdfInput" type="file" accept="application/pdf" multiple>
+                    <button id="uploadButton">Upload PDFs</button>
+                </div>
+
+                <div id="uploadStatus" class="status"></div>
+
+                <div class="documents-header">
+                    <h3>Uploaded documents</h3>
+                    <button id="clearButton" class="secondary-button">Clear all</button>
+                </div>
+
+                <div id="documentsList" class="documents-list">
+                    <div class="empty-state">
+                        No documents uploaded yet.
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2>2. Ask a question</h2>
+                    <p>The chatbot answers only from uploaded PDF content.</p>
+                </div>
+
+                <textarea
+                    id="questionInput"
+                    placeholder="Example: What is the refund policy?"
+                ></textarea>
+
+                <button id="askButton">Ask AI</button>
+
+                <div id="errorBox" class="error-box hidden"></div>
+
+                <div class="answer-section">
+                    <h3>Answer</h3>
+                    <div id="answerBox" class="answer-box">
+                        Upload a PDF and ask a question to see the answer here.
+                    </div>
+                </div>
+
+                <div class="sources-section">
+                    <h3>Sources</h3>
+                    <div id="sourcesBox" class="sources-box">
+                        Sources will appear here.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.env
+
+backend/.venv/
+backend/.env/
+backend/data/*.db
+backend/uploads/*
+
+__pycache__/
+*.pyc
+
+.vscode/
+.DS_Store
