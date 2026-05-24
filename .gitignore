@@ -1,5 +1,9 @@
 # Python
 .venv/
+backend/.venv/
+backend/.env/
+backend/data/*.db
+backend/uploads/*
 __pycache__/
 *.pyc
 
@@ -22,3 +26,4 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
