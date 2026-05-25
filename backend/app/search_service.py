@@ -1,7 +1,6 @@
 from typing import List, Dict, Any
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from app.embedding_service import create_embeddings, cosine_similarity
 
 
 def retrieve_relevant_chunks(
@@ -10,40 +9,40 @@ def retrieve_relevant_chunks(
     top_k: int = 5
 ) -> List[Dict[str, Any]]:
     """
-    Finds the most relevant chunks for the user's question.
-
-    This version uses TF-IDF + cosine similarity.
+    Finds the most relevant chunks using embeddings + cosine similarity.
     """
 
     if not chunks:
         return []
 
-    texts = [chunk["text"] for chunk in chunks]
+    chunks_with_embeddings = [
+        chunk for chunk in chunks
+        if chunk.get("embedding") is not None
+    ]
 
-    try:
-        vectorizer = TfidfVectorizer()
-        matrix = vectorizer.fit_transform(texts + [question])
-
-        question_vector = matrix[-1]
-        chunk_vectors = matrix[:-1]
-
-        similarities = cosine_similarity(question_vector, chunk_vectors).flatten()
-
-    except ValueError:
+    if not chunks_with_embeddings:
         return []
+
+    question_embedding = create_embeddings([question])[0]
 
     scored_chunks = []
 
-    for index, chunk in enumerate(chunks):
+    for chunk in chunks_with_embeddings:
+        score = cosine_similarity(
+            question_embedding,
+            chunk["embedding"],
+        )
+
         chunk_copy = chunk.copy()
-        chunk_copy["score"] = float(similarities[index])
+        chunk_copy["score"] = score
+
         scored_chunks.append(chunk_copy)
 
     scored_chunks.sort(key=lambda item: item["score"], reverse=True)
 
     relevant_chunks = [
         chunk for chunk in scored_chunks
-        if chunk["score"] > 0
+        if chunk["score"] > 0.2
     ]
 
     return relevant_chunks[:top_k]

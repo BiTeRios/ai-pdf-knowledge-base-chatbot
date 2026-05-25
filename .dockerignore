@@ -1,0 +1,12 @@
+.env
+
+backend/.venv/
+backend/data/
+backend/uploads/
+
+__pycache__/
+*.pyc
+
+.git/
+.vscode/
+.DS_Store

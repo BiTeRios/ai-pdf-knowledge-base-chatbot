@@ -3,6 +3,7 @@ from typing import List
 import shutil
 import uuid
 
+from app.embedding_service import create_embeddings_for_chunks
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,9 @@ from app.database import (
     get_all_chunks,
     get_document_stats,
     delete_all_chunks,
+    save_chat_message,
+    get_chat_history,
+    delete_chat_history,
 )
 from app.pdf_service import extract_chunks_from_pdf
 from app.search_service import retrieve_relevant_chunks
@@ -116,6 +120,8 @@ async def upload_pdfs(files: List[UploadFile] = File(...)):
                     }
                 )
                 continue
+
+            chunks = create_embeddings_for_chunks(chunks)
 
             insert_chunks(safe_file_name, chunks)
 

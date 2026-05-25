@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Any
@@ -17,6 +18,13 @@ def get_connection():
     return connection
 
 
+def column_exists(cursor, table_name: str, column_name: str) -> bool:
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = cursor.fetchall()
+
+    return any(column["name"] == column_name for column in columns)
+
+
 def init_db():
     connection = get_connection()
     cursor = connection.cursor()
@@ -29,6 +37,22 @@ def init_db():
             page_number INTEGER,
             chunk_index INTEGER NOT NULL,
             text TEXT NOT NULL,
+            embedding TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    if not column_exists(cursor, "chunks", "embedding"):
+        cursor.execute("ALTER TABLE chunks ADD COLUMN embedding TEXT")
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            sources_json TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -43,16 +67,20 @@ def insert_chunks(file_name: str, chunks: List[Dict[str, Any]]):
     cursor = connection.cursor()
 
     for chunk in chunks:
+        embedding = chunk.get("embedding")
+        embedding_json = json.dumps(embedding) if embedding else None
+
         cursor.execute(
             """
-            INSERT INTO chunks (file_name, page_number, chunk_index, text)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO chunks (file_name, page_number, chunk_index, text, embedding)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 file_name,
                 chunk["page_number"],
                 chunk["chunk_index"],
                 chunk["text"],
+                embedding_json,
             ),
         )
 
@@ -66,7 +94,7 @@ def get_all_chunks() -> List[Dict[str, Any]]:
 
     cursor.execute(
         """
-        SELECT id, file_name, page_number, chunk_index, text
+        SELECT id, file_name, page_number, chunk_index, text, embedding
         FROM chunks
         ORDER BY id ASC
         """
@@ -75,7 +103,22 @@ def get_all_chunks() -> List[Dict[str, Any]]:
     rows = cursor.fetchall()
     connection.close()
 
-    return [dict(row) for row in rows]
+    chunks = []
+
+    for row in rows:
+        chunk = dict(row)
+
+        if chunk.get("embedding"):
+            try:
+                chunk["embedding"] = json.loads(chunk["embedding"])
+            except json.JSONDecodeError:
+                chunk["embedding"] = None
+        else:
+            chunk["embedding"] = None
+
+        chunks.append(chunk)
+
+    return chunks
 
 
 def get_document_stats() -> List[Dict[str, Any]]:
@@ -106,6 +149,71 @@ def delete_all_chunks():
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM chunks")
+
+    connection.commit()
+    connection.close()
+
+
+def save_chat_message(question: str, answer: str, sources: List[Dict[str, Any]]):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    sources_json = json.dumps(sources, ensure_ascii=False)
+
+    cursor.execute(
+        """
+        INSERT INTO chat_history (question, answer, sources_json)
+        VALUES (?, ?, ?)
+        """,
+        (question, answer, sources_json),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_chat_history(limit: int = 20) -> List[Dict[str, Any]]:
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, question, answer, sources_json, created_at
+        FROM chat_history
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+
+    rows = cursor.fetchall()
+    connection.close()
+
+    history = []
+
+    for row in rows:
+        item = dict(row)
+
+        if item.get("sources_json"):
+            try:
+                item["sources"] = json.loads(item["sources_json"])
+            except json.JSONDecodeError:
+                item["sources"] = []
+        else:
+            item["sources"] = []
+
+        del item["sources_json"]
+
+        history.append(item)
+
+    return history
+
+
+def delete_chat_history():
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("DELETE FROM chat_history")
 
     connection.commit()
     connection.close()
