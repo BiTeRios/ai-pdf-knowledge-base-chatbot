@@ -2,6 +2,9 @@ const pdfInput = document.getElementById("pdfInput");
 const uploadButton = document.getElementById("uploadButton");
 const uploadStatus = document.getElementById("uploadStatus");
 
+const historyList = document.getElementById("historyList");
+const clearHistoryButton = document.getElementById("clearHistoryButton");
+
 const documentsList = document.getElementById("documentsList");
 const clearButton = document.getElementById("clearButton");
 
@@ -64,6 +67,48 @@ async function loadDocuments() {
     }
 }
 
+async function loadChatHistory() {
+    try {
+        const response = await fetch("/api/chat-history");
+        const data = await response.json();
+
+        historyList.innerHTML = "";
+
+        if (!data.history || data.history.length === 0) {
+            historyList.innerHTML = `
+                <div class="empty-state">
+                    No questions asked yet.
+                </div>
+            `;
+            return;
+        }
+
+        data.history.forEach((item) => {
+            const historyItem = window.document.createElement("div");
+            historyItem.className = "history-item";
+
+            historyItem.innerHTML = `
+                <div class="history-question">${item.question}</div>
+                <div class="history-date">${item.created_at}</div>
+            `;
+
+            historyItem.addEventListener("click", () => {
+                questionInput.value = item.question;
+                answerBox.textContent = item.answer;
+                renderSources(item.sources);
+            });
+
+            historyList.appendChild(historyItem);
+        });
+
+    } catch (error) {
+        historyList.innerHTML = `
+            <div class="empty-state">
+                Could not load chat history.
+            </div>
+        `;
+    }
+}
 
 uploadButton.addEventListener("click", async () => {
     clearError();
@@ -150,6 +195,8 @@ askButton.addEventListener("click", async () => {
 
         renderSources(data.sources);
 
+        await loadChatHistory();
+
     } catch (error) {
         showError(error.message);
         answerBox.textContent = "No answer generated.";
@@ -160,6 +207,34 @@ askButton.addEventListener("click", async () => {
     }
 });
 
+clearHistoryButton.addEventListener("click", async () => {
+    clearError();
+
+    const confirmed = confirm("Delete chat history?");
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/chat-history", {
+            method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Failed to clear chat history.");
+        }
+
+        uploadStatus.textContent = data.message;
+
+        await loadChatHistory();
+
+    } catch (error) {
+        showError(error.message);
+    }
+});
 
 clearButton.addEventListener("click", async () => {
     clearError();
@@ -223,3 +298,4 @@ function renderSources(sources) {
 
 
 loadDocuments();
+loadChatHistory();

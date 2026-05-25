@@ -231,3 +231,25 @@ textarea {
         font-size: 28px;
     }
 }
+
+.history-item {
+    border: 1px solid #e5e7eb;
+    padding: 12px;
+    border-radius: 14px;
+    background: #f9fafb;
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background: #eef2ff;
+}
+
+.history-question {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.history-date {
+    color: #6b7280;
+    font-size: 13px;
+}

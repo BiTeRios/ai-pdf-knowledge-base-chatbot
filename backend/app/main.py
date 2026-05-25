@@ -196,9 +196,33 @@ def ask_question(request: AskRequest):
             }
         )
 
+    save_chat_message(
+        question=question,
+        answer=answer,
+        sources=sources,
+    )
+
     return {
         "answer": answer,
         "sources": sources,
+    }
+
+@app.get("/api/chat-history")
+def list_chat_history():
+    history = get_chat_history(limit=20)
+
+    return {
+        "history": history,
+        "total_items": len(history),
+    }
+
+
+@app.delete("/api/chat-history")
+def clear_chat_history():
+    delete_chat_history()
+
+    return {
+        "message": "Chat history was deleted.",
     }
 
 
