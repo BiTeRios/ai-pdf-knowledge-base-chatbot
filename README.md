@@ -10,10 +10,6 @@ Many companies store important information in PDF files: internal policies, prod
 
 This project demonstrates how an AI assistant can help employees or customers quickly find answers from company documents without manually searching through long PDF files.
 
-## Screenshot
-
-![Answer with Sources](image.png)
-
 Example use cases:
 
 - HR policy assistant
@@ -47,6 +43,10 @@ Example use cases:
 - Demo scenario
 - Screenshots
 - Future improvements
+
+## Screenshot
+
+![Answer with Sources](image.png)
 
 ## Tech Stack
 
