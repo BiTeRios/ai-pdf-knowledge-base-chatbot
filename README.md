@@ -18,6 +18,14 @@ Example use cases:
 - Legal document Q&A prototype
 - Product manual chatbot
 - Training material assistant
+- Business use case
+- Features
+- Tech stack
+- Architecture
+- Docker setup
+- Demo scenario
+- Screenshots
+- Future improvements
 
 ## Features
 
